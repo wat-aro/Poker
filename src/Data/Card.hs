@@ -1,12 +1,13 @@
 module Data.Card
     ( Suit(..)
-    , Card
+    , Card(..)
     , cardSuit
     , cardNumber
     , decision
+    , cardStrength
     ) where
 
-import           Data.List (sort)
+import qualified Data.List as List
 
 data Suit = Hearts | Diamonds | Clubs | Spades
   deriving (Show, Read, Eq, Ord, Enum)
@@ -37,5 +38,9 @@ cardNumber (Card n _) = n
 decision :: [Card] -> Maybe [Card]
 decision l =
     if length l == 5
-    then Just $ sort l
+    then Just $ List.sort l
     else Nothing
+
+cardStrength :: Card -> Int
+cardStrength (Card 14 _) = 1
+cardStrength (Card n _) = n

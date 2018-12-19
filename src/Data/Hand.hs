@@ -3,12 +3,12 @@ module Data.Hand
     , toHand, fromHand
     ) where
 
-import Data.Card ( Card )
+import qualified Data.Card as Card
 import qualified Data.List as List
+import Data.Semigroup ((<>))
+newtype Hand = Hand { fromHand :: [Card.Card] } deriving (Show, Eq, Ord)
 
-newtype Hand = Hand { fromHand :: [Card] } deriving (Show, Eq, Ord)
-
-toHand :: [Card] -> Maybe Hand
+toHand :: [Card.Card] -> Maybe Hand
 toHand l =
   if length l == 5
     then Just $ Hand (List.sort l)
@@ -66,3 +66,28 @@ fourOfAKind = undefined
 
 straightFlush :: hand -> Maybe PokerHand
 straightFlush = undefined
+
+flushHint :: Hand -> Bool
+flushHint (Hand h) =
+  all ((Card.cardSuit (head h) ==) . Card.cardSuit) h
+
+nOfKindHint :: Int -> Hand -> Maybe [[Card.Card]]
+nOfKindHint n (Hand h) = if cards /= [] then Just cards else Nothing
+  where
+    cards :: [[Card.Card]]
+    cards = filter ((==n).length) $
+              List.groupBy (\x y -> Card.cardNumber x == Card.cardNumber y) h
+
+straightHint :: Hand -> Bool
+straightHint (Hand l) =
+  (judgeStraight . extract Card.cardStrength $ l) || (judgeStraight . List.sort . extract Card.cardNumber $ l)
+  where
+    isStraight :: [Int] -> Bool
+    isStraight xs@(x:_) = xs == [x .. x + 4]
+    isStraight _ = False
+
+    judgeStraight :: [(Int, Card.Card)] -> Bool
+    judgeStraight l = isStraight $ map fst l
+
+    extract :: (b -> a) -> [b] -> [(a, b)]
+    extract f = map (\c -> (f c, c))
